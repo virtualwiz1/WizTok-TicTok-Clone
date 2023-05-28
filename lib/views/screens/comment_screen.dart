@@ -1,0 +1,145 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:wiztok/constants.dart';
+import 'package:wiztok/controllers/comment_controller.dart';
+import 'package:timeago/timeago.dart' as tago;
+
+class CommentScreen extends StatelessWidget {
+  final String id;
+  CommentScreen({super.key, required this.id});
+
+  final TextEditingController _commentController = TextEditingController();
+  CommentController commentController = Get.put(CommentController());
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    commentController.updatePostId(id);
+    return Scaffold(
+      body: SingleChildScrollView(
+          child: SizedBox(
+        height: size.height,
+        width: size.width,
+        child: Column(
+          children: [
+            Expanded(
+              child: Obx(() {
+                return ListView.builder(
+                    itemCount: commentController.comments.length,
+                    itemBuilder: (context, index) {
+                      final comment = commentController.comments[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.black,
+                          backgroundImage: NetworkImage(comment.profilePic),
+                        ),
+                        title: Row(
+                          children: [
+                            Text(
+                              comment.username,
+                              style: const TextStyle(
+                                color: buttonColor,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 7,
+                            ),
+                            Text(
+                              comment.comment,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Text(
+                              tago.format(
+                                comment.datePublished.toDate(),
+                              ),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              '${comment.likes.length.toString()} likes',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: InkWell(
+                          onTap: () {
+                            commentController.likeComment(comment.id);
+                          },
+                          child: Icon(
+                            Icons.favorite,
+                            size: 25,
+                            color:
+                                comment.likes.contains(authController.user.uid)
+                                    ? Colors.red
+                                    : Colors.white,
+                          ),
+                        ),
+                      );
+                    });
+              }),
+            ),
+            const Divider(),
+            ListTile(
+              title: TextFormField(
+                controller: _commentController,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Comment',
+                  labelStyle: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.white,
+                    ),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: buttonColor,
+                    ),
+                  ),
+                ),
+              ),
+              trailing: TextButton(
+                onPressed: () {
+                  commentController.postComment(_commentController.text);
+                  _commentController.clear();
+                },
+                child: const Text(
+                  'Send',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      )),
+    );
+  }
+}
